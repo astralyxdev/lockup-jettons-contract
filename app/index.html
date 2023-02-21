@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LCJ | APP</title>
+
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta name="description" content="LCJ | APP" />
+
+    <link rel="stylesheet" href="styles/index.css" type="text/css" />
+    <link rel="stylesheet" href="styles/root.css" type="text/css" />
+    <link rel="stylesheet" href="styles/components.css" type="text/css" />
+
+    <script src="scripts/index.js?version=1"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="wrapper__in">
+        <div class="form form--main">
+          <div class="form__address">
+            <input
+              class="input"
+              placeholder="Contract address"
+              id="contractAddress"
+            />
+            <button
+              class="button button--secondary"
+              onclick="return checkContract()"
+            >
+              Check
+            </button>
+          </div>
+          <div class="form__create">
+            <button
+              onclick="switchForm()"
+              class="button button--large button--primary"
+            >
+              Create contract
+            </button>
+          </div>
+        </div>
+        <div class="form form--create">
+          <div class="form__address">
+            <input
+              class="input"
+              placeholder="Receiver address"
+              id="receiverAddress"
+            />
+          </div>
+          <div class="form__address">
+            <input
+              class="input"
+              type="datetime-local"
+              id="unblockTime"
+              placeholder="Unblock date"
+            />
+          </div>
+          <div class="form__address">
+            <label class="checkbox__wrapper"
+              >Can change time of unblock
+              <input
+                type="checkbox"
+                class="checkbox__content"
+                id="canChangeTime"
+              />
+              <span class="checkbox__checkmark"></span>
+            </label>
+          </div>
+          <div class="form__create">
+            <button
+              class="button button--large button--primary"
+              onclick="return createContract()"
+            >
+              Create
+            </button>
+            <button
+              onclick="return switchForm()"
+              class="button button--large button--secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+        <div class="form form--no-ton">
+          <div class="form__text">
+            <span>TON chrome extension not found!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="scripts/switchNet.js?version=1"></script>
+  </body>
+</html>

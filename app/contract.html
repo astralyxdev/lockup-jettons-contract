@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LCJ | APP</title>
+
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta name="description" content="LCJ | APP" />
+
+    <link rel="stylesheet" href="styles/contract.css" type="text/css" />
+    <link rel="stylesheet" href="styles/root.css" type="text/css" />
+    <link rel="stylesheet" href="styles/components.css" type="text/css" />
+
+    <script src="scripts/tonweb.js"></script>
+    <script src="scripts/contract.js?version=1"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="wrapper__in">
+        <div class="contract__wrapper">
+          <div class="contract__text__wrapper">
+            <div class="contract__text"><span>Contract ID:</span></div>
+            <div class="contract__description">
+              <span id="contractId">...</span>
+            </div>
+          </div>
+          <div class="contract__text__wrapper" id="unblockTimeWrapper">
+            <div class="contract__text"><span>Unblock time:</span></div>
+            <div class="contract__description">
+              <span id="unblockTime">...</span>
+            </div>
+          </div>
+          <div class="contract__text__wrapper">
+            <div class="contract__text"><span>From -> To:</span></div>
+            <div class="contract__description">
+              <span id="fromTo">...</span>
+            </div>
+          </div>
+        </div>
+        <div class="actions__wrapper">
+          <div class="actions__block">
+            <div class="block__text">
+              <span>Withdraw</span>
+              <label class="switch__wrapper">
+                <input
+                  type="checkbox"
+                  class="switch__content"
+                  onchange="return payTypeChanged()"
+                />
+                <span class="switch__slider"></span>
+              </label>
+              <span>Pay</span>
+            </div>
+            <div class="form">
+              <div class="form__token">
+                <input
+                  placeholder="Amount"
+                  class="input"
+                  onchange="return onAmountChange()"
+                  onkeydown="return onAmountChange()"
+                  id="amount"
+                />
+                <div class="select__wrapper">
+                  <select
+                    class="select__in"
+                    id="tokenSelect"
+                    onchange="return tokenSelectedChange()"
+                  >
+                    <option selected disabled>...</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form__amount">
+                <span id="walletBalance"></span>
+              </div>
+              <div class="form__button">
+                <button
+                  class="button button--large button--primary"
+                  id="payFormButton"
+                ></button>
+              </div>
+            </div>
+          </div>
+          <div class="actions__block">
+            <div class="block__text">
+              <span>Change unblock time</span>
+            </div>
+            <div class="form">
+              <div class="form__token">
+                <input
+                  class="input"
+                  type="datetime-local"
+                  placeholder="Unblock date"
+                  id="updateUblockTime"
+                />
+              </div>
+              <div class="form__button">
+                <button
+                  class="button button--large button--primary"
+                  onclick="return changeUnblockTime()"
+                >
+                  Change
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="scripts/switchNet.js?version=1"></script>
+  </body>
+</html>
