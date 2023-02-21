@@ -19,7 +19,7 @@
   <body>
     <div class="wrapper">
       <div class="wrapper__in">
-        <div class="form form--visible form--main">
+        <div class="form form--main">
           <div class="form__address">
             <input
               class="input"
@@ -51,7 +51,12 @@
             />
           </div>
           <div class="form__address">
-            <input class="input" type="datetime-local" id="unblockTime" />
+            <input
+              class="input"
+              type="datetime-local"
+              id="unblockTime"
+              placeholder="Unblock date"
+            />
           </div>
           <div class="form__address">
             <label class="checkbox__wrapper"
@@ -77,6 +82,11 @@
             >
               Cancel
             </button>
+          </div>
+        </div>
+        <div class="form form--no-ton">
+          <div class="form__text">
+            <span>TON chrome extension not found!</span>
           </div>
         </div>
       </div>

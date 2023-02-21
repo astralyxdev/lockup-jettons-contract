@@ -4,6 +4,10 @@ const today = new Date().toISOString().slice(0, 16);
 
 // ? Switch forms between create and check contracts
 const switchForm = () => {
+  if (!window.ton) {
+    return;
+  }
+
   if (currentForm === "main") {
     document.querySelector(".form--create").classList.add("form--visible");
 
@@ -68,3 +72,10 @@ const createContract = () => {
   document.getElementById("unblockTime").value = "";
   document.getElementById("canChangeTime").checked = false;
 };
+
+window.addEventListener("DOMContentLoaded", () => {
+  const isTonExtensionExist = window.ton;
+  const formToView = isTonExtensionExist ? "main" : "no-ton";
+
+  document.querySelector(`.form--${formToView}`).classList.add("form--visible");
+});

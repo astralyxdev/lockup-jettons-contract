@@ -53,6 +53,17 @@
   gap: 20px;
 }
 
+.form__text {
+  text-align: center;
+  max-width: 80%;
+  margin: auto;
+}
+
+.form__text span {
+  font-weight: 700;
+  font-size: 24px;
+}
+
 @media screen and (max-width: 770px) {
   .wrapper__in {
     padding: 20px;

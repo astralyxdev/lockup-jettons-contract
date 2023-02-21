@@ -16,6 +16,13 @@ const userData = {
   balances: {},
 };
 
+const countCharts = function (string, c) {
+  var result = 0,
+    i = 0;
+  for (i; i < string.length; i++) if (string[i] === c) result++;
+  return result;
+};
+
 const convertBalance = (number = 0, decimals = 9) => {
   return number / 10 ** Number(decimals);
 };
@@ -92,6 +99,7 @@ const getContractTonBalance = async (
     metadata: {
       symbol: "TON",
       image: icon,
+      decimals: 9,
     },
   };
 };
@@ -120,6 +128,7 @@ const getContractJettonsBalance = async (
       metadata: {
         symbol,
         image,
+        decimals,
       },
     };
   });
@@ -149,12 +158,16 @@ const payTypeChanged = () => {
     buttonType = "withdraw";
   }
 
+  document.getElementById("amount").value = "";
+
   updateList();
 
   document.getElementById("payFormButton").innerText = buttonType;
 };
 
 const tokenSelectedChange = () => {
+  document.getElementById("amount").value = "";
+
   const newSelectedToken =
     document.getElementById("tokenSelect").selectedOptions[0].value;
 
@@ -174,8 +187,44 @@ const changeUnblockTime = () => {
   }
 };
 
+const onAmountChange = () => {
+  const inputEl = document.getElementById("amount");
+
+  console.debug("inputEl", inputEl.values);
+
+  const object =
+    buttonType === "pay" ? userData.balances : contractData.balances;
+  const tokenData = object[selectedToken];
+
+  let newValue = (inputEl.value || "").replace(/[^\d.]+/g, "");
+
+  if (countCharts(newValue || "", ".") > 1) {
+    inputEl.value = Math.trunc(tokenData.balance);
+
+    return false;
+  }
+
+  if (countCharts(newValue || "", ".") === 1) {
+    const chartsAfterDot = newValue.split(".")[1];
+
+    if (chartsAfterDot.length > tokenData.metadata.decimals) {
+      inputEl.value = tokenData.balance;
+
+      return false;
+    }
+  }
+
+  if (Number(inputEl.value) > Number(tokenData.balance)) {
+    inputEl.value = tokenData.balance;
+
+    return false;
+  }
+
+  inputEl.value = newValue;
+};
+
 window.addEventListener("DOMContentLoaded", () => {
-  if (!contractAddress) {
+  if (!contractAddress || !window.ton) {
     window.location = "/";
 
     return;

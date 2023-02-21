@@ -42,6 +42,9 @@
 .contract__text__wrapper .contract__description span {
   font-size: 14px;
   line-height: 17px;
+
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .block__text {

@@ -12,6 +12,10 @@ const switchNetStatus = () => {
 };
 
 const drawSwitch = () => {
+  if (!window.ton) {
+    return;
+  }
+
   const isTestNetEnabled = window.localStorage.getItem("testnet");
 
   document.body.prepend(

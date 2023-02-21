@@ -56,7 +56,13 @@
             </div>
             <div class="form">
               <div class="form__token">
-                <input placeholder="Amount" class="input" />
+                <input
+                  placeholder="Amount"
+                  class="input"
+                  onchange="return onAmountChange()"
+                  onkeydown="return onAmountChange()"
+                  id="amount"
+                />
                 <div class="select__wrapper">
                   <select
                     class="select__in"
@@ -85,9 +91,9 @@
             <div class="form">
               <div class="form__token">
                 <input
-                  placeholder="Amount"
                   class="input"
                   type="datetime-local"
+                  placeholder="Unblock date"
                   id="updateUblockTime"
                 />
               </div>
