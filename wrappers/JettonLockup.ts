@@ -1,4 +1,4 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
+import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode, toNano } from 'ton-core';
 
 export type JettonLockupConfig = {
     owner: Address;
@@ -28,7 +28,8 @@ export class JettonLockup implements Contract {
         return new JettonLockup(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+    async sendDeploy(provider: ContractProvider, via: Sender) {
+        const value = toNano('0.05')
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATLY,

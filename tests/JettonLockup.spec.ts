@@ -26,7 +26,7 @@ describe('JettonLockup', () => {
                     owner: owner.address,
                 }
             ));
-        let deployResult = await jettonRoot.sendDeploy(owner.getSender(), toNano('0.05'));
+        let deployResult = await jettonRoot.sendDeploy(owner.getSender());
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
             to: jettonRoot.address,
@@ -44,7 +44,7 @@ describe('JettonLockup', () => {
             blockchainLogs: true,
             vmLogs: 'vm_logs',
         })
-        deployResult = await jettonLockup.sendDeploy(owner.getSender(), toNano('0.05'));
+        deployResult = await jettonLockup.sendDeploy(owner.getSender());
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
             to: jettonLockup.address,
