@@ -1,10 +1,9 @@
-import { Blockchain, OpenedContract, SmartContract, TreasuryContract } from '@ton-community/sandbox';
-import { beginCell, Cell, toNano, fromNano, Slice, Address, Dictionary, DictionaryKey } from 'ton-core';
+import { Blockchain, OpenedContract, TreasuryContract } from '@ton-community/sandbox';
+import { beginCell, Cell, toNano, fromNano, Address } from 'ton-core';
 import { JettonLockup } from '../wrappers/JettonLockup';
 import '@ton-community/test-utils';
 import { compile } from '@ton-community/blueprint';
 import { JettonRoot } from "../wrappers/JettonRoot";
-import {sleep} from "@ton-community/blueprint/dist/utils";
 
 describe('JettonLockup', () => {
     let jettonLockupCode: Cell;
