@@ -102,7 +102,7 @@ const createContract = () => {
 
   window.ton.send('ton_requestAccounts').then(async (accounts) => {
     contract = new LockupJettonsContract(tonweb.provider, {
-      ownerAddress: canChangeTime ? accounts[0] : null,
+      ownerAddress: canChangeTime ? new TonWeb.Address(accounts[0]) : null,
       receiverAddress: receiverAddress,
       unlockedAt: unblockTime,
     });

@@ -2,6 +2,14 @@ const querySearch = new URLSearchParams(window.location.search);
 const contractAddress = querySearch.get("address");
 const today = new Date().toISOString().slice(0, 16);
 
+const tonweb = new TonWeb(
+  new TonWeb.HttpProvider(
+      'https://' + (window.localStorage.getItem("testnet") === 'true' ? 'testnet.toncenter.com/api/v2/jsonRPC' : 'scalable-api.tonwhales.com/jsonRPC'),
+      {}
+  )
+);
+const Cell = tonweb.boc.Cell;
+
 let subdomain =
   window.localStorage.getItem("testnet") === "true" ? "testnet." : "";
 let currentTonWallets = [];
@@ -135,20 +143,15 @@ const getContractJettonsBalance = async (
 };
 
 const getContractInfo = async () => {
-  const result = await fetch(
-    `https://${subdomain}toncenter.com/api/v2/runGetMethod`,
-    {
-      headers: {
-        ["Content-Type"]: "application/json",
-      },
-      body: JSON.stringify({
-        address: contractAddress,
-        method: "lockup_data",
-        stack: [],
-      }),
-      method: "POST",
-    }
-  ).then((res) => res.json());
+  console.log(contractAddress);
+  let result = await tonweb.provider.call2(contractAddress, 'lockup_data');
+  let owner = result[0].beginParse().loadAddress();
+  let receiver = result[1].beginParse().loadAddress();
+  return {
+    owner: owner ? owner.toString(1, 1, 1) : null,
+    receiver: receiver ? receiver.toString(1, 1, 1) : null,
+    unlockedAt: parseInt(result[2].toString()),
+  };
 };
 
 const payTypeChanged = () => {
