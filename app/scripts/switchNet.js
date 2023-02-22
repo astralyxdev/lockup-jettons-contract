@@ -9,6 +9,7 @@ const switchNetStatus = () => {
   const testNetChecked = document.getElementById("switchNet").checked;
 
   window.localStorage.setItem("testnet", testNetChecked);
+  window.location.reload();
 };
 
 const drawSwitch = () => {
