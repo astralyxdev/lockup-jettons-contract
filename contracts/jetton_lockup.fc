@@ -1,15 +1,7 @@
+;; Jetton Lockup Contract v1 by delpydoc@astralyx.dev
 
-
-{-
-    Storage
-    jetton_balances:dict[
-        wallet_address:uint256$
-            amount:Coins
-    ]
-    recipient_address:MsgAddressInt
-    unlocked_at:uint64
-    owner_address:MsgAddressInt
--}
+;; Storage TL-B Scheme;
+;; storage#_ jetton_balances: (HasmapE 256 Coins) receiver_address:MsgIntAddress unlocked_at:uint64 owner_address:MsgIntAddress = Storage;
 
 #include "imports/stdlib.fc";
 #include "imports/constants.fc";
@@ -46,7 +38,13 @@
                 .store_slice(sender_address)
                 .store_coins(0)
                 .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-                .store_ref(get_data())
+                .store_ref(
+                    begin_cell()
+                        .store_uint("lockup_data"c, 32)
+                        .store_uint(query_id, 64)
+                        .store_ref(get_data())
+                        .end_cell()
+                )
                 .end_cell(),
             64
         );
@@ -67,6 +65,7 @@
             int stored_value = found? ? vs~load_coins() : 0;
             stored_value += in_msg_body~load_coins();
 
+            ;; store amount of incoming tokens for processing by other smart contracts
             jetton_balances~udict_set_builder(
                 256, sender_hashpart,
                 begin_cell()
@@ -101,6 +100,7 @@
         throw_unless(401, equal_slices(sender_address, receiver_address));
         throw_unless(402, unlocked_at <= now());
 
+        ;; if requested by recipient and lock time has expired, allow up to 4 internal messages to be sent
         while (in_msg_body.slice_refs()) {
             var msg = in_msg_body~load_ref().begin_parse();
             slice target_address = msg~load_msg_addr();
@@ -108,12 +108,14 @@
             int amount = msg~load_coins();
             cell msg_body = msg.slice_refs() > 0 ? msg~load_ref() : null();
             (slice vs, int found?) = jetton_balances.udict_get?(256, target_hashpart);
+            ;; check whether this transaction affects the stored token balances
             if (found? & (~ null?(msg_body))) {
                 slice ms = msg_body.begin_parse();
                 int op = ms~load_uint(32);
                 if ((op == op::transfer) | (op == op::burn)) {
-                    msg~skip_bits(64);
-                    int amount = msg~load_coins();
+                    ;; if yes, update the onchain information about balances
+                    ms~skip_bits(64);
+                    int amount = ms~load_coins();
                     int stored_amount = vs~load_coins();
                     amount = max(stored_amount - amount, 0);
 
@@ -165,4 +167,3 @@
         jetton_balances
     );
 }
-

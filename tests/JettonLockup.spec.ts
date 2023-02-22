@@ -1,9 +1,25 @@
 import { Blockchain, OpenedContract, TreasuryContract } from '@ton-community/sandbox';
-import { beginCell, Cell, toNano, fromNano, Address } from 'ton-core';
+import { beginCell, Cell, toNano, fromNano, Address, Dictionary, DictionaryValue } from 'ton-core';
 import { JettonLockup } from '../wrappers/JettonLockup';
 import '@ton-community/test-utils';
 import { compile } from '@ton-community/blueprint';
 import { JettonRoot } from "../wrappers/JettonRoot";
+
+export type BalanceValue = {
+    balance: bigint
+};
+
+const BalancesValue: DictionaryValue<BalanceValue> = {
+    serialize: (src: BalanceValue, builder) => {
+        builder
+            .storeCoins(src.balance)
+    },
+    parse: (src) => {
+        return {
+            balance: src.loadCoins(),
+        }
+    },
+}
 
 describe('JettonLockup', () => {
     let jettonLockupCode: Cell;
@@ -57,7 +73,7 @@ describe('JettonLockup', () => {
                 .storeUint(21, 32)
                 .storeUint(0, 64)
                 .storeAddress(owner.address)
-                .storeCoins(toNano('0.05'))
+                .storeCoins(toNano('0.07'))
                 .storeRef(
                     beginCell()
                         .storeUint(0x178d4519, 32)
@@ -65,7 +81,7 @@ describe('JettonLockup', () => {
                         .storeCoins(toNano('1000000'))
                         .storeAddress(null)
                         .storeAddress(null)
-                        .storeCoins(0)
+                        .storeCoins(toNano('0.02'))
                         .storeUint(0, 1)
                         .endCell()
                 )
@@ -92,7 +108,6 @@ describe('JettonLockup', () => {
                 .storeAddress(jettonLockup.address)
                 .storeAddress(owner.address)
                 .storeUint(0, 1)
-                .storeCoins(1)
                 .storeCoins(toNano('0.05'))
                 .storeUint(0, 1)
                 .endCell()
@@ -106,10 +121,12 @@ describe('JettonLockup', () => {
         expect(lockupData[0].toString()).toBe(owner.address.toString());
         expect(lockupData[1].toString()).toBe(receiver.address.toString());
 
-        // console.log(typeof(lockupData[3]), lockupData[3]);
-        // let jettonBalances = Dictionary.load(Dictionary.Keys.Uint(256), Dictionary.Values.Cell(), lockupData[3]);
-
-        // TODO: make extract stored values from dict result.stack[3]
+        let accountState = (await blockchain.getContract(jettonLockup.address)).accountState;
+        if (accountState?.type !== 'active') throw new Error('Contract is not active');
+        let accountData = accountState.state.data;
+        if (!accountData) throw new Error('Contract has invalid data');
+        const storedJettonBalance = accountData.beginParse().loadDict(Dictionary.Keys.Buffer(32), BalancesValue).values()[0].balance;
+        expect(storedJettonBalance).toBe(1000000000000n);
     });
 
     it('can\'t withdraw locked coins', async () => {
@@ -190,5 +207,36 @@ describe('JettonLockup', () => {
             console.log("Jettons in lockup: ", stack[0].value);
             expect(stack[0].value / BigInt(10 ** 9)).toBe(500n);
         }
+
+        let accountState = (await blockchain.getContract(jettonLockup.address)).accountState;
+        if (accountState?.type !== 'active') throw new Error('Contract is not active');
+        let accountData = accountState.state.data;
+        if (!accountData) throw new Error('Contract has invalid data');
+        const storedJettonBalance = accountData.beginParse().loadDict(Dictionary.Keys.Buffer(32), BalancesValue).values()[0].balance;
+        expect(storedJettonBalance).toBe(500000000000n);
+    });
+
+    it('lockup can drop onchain data', async () => {
+        let requestResult = await receiver.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.2'),
+            'body': beginCell()
+                .storeUint(0x7a4c6d4a, 32)
+                .storeUint(10, 64)
+                .endCell()
+        });
+        let accountState = (await blockchain.getContract(jettonLockup.address)).accountState;
+        if (accountState?.type !== 'active') throw new Error('Contract is not active');
+        let accountData = accountState.state.data;
+        if (!accountData) throw new Error('Contract has invalid data');
+        expect(requestResult.transactions).toHaveTransaction({
+            from: jettonLockup.address,
+            to: receiver.address,
+            body: beginCell()
+                .storeUint(0x7a4c6d4a, 32)
+                .storeUint(10, 64)
+                .storeRef(accountData).endCell(),
+            success: true,
+        });
     });
 });

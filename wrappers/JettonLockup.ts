@@ -36,9 +36,9 @@ export class JettonLockup implements Contract {
         });
     }
 
-    async getLockupData(provider: ContractProvider) {
+    async getLockupData(provider: ContractProvider): Promise<[Address, Address, number, Cell]> {
         const { stack } = await provider.get("lockup_data", []);
-        return [stack.readAddress(), stack.readAddress(), stack.readNumber()];
+        return [stack.readAddress(), stack.readAddress(), stack.readNumber(), stack.readCell()];
     }
 
     async sendTransfer(provider: ContractProvider, via: Sender, to: Address) {
