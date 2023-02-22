@@ -140,7 +140,7 @@ describe('JettonLockup', () => {
                     beginCell()
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
-                        .storeRef(
+                        .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
                                 .storeUint(0, 64)
@@ -181,7 +181,7 @@ describe('JettonLockup', () => {
                     beginCell()
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
-                        .storeRef(
+                        .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
                                 .storeUint(0, 64)
@@ -266,7 +266,7 @@ describe('JettonLockup', () => {
                     beginCell()
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
-                        .storeRef(
+                        .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
                                 .storeUint(0, 64)
