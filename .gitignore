@@ -1,5 +1,5 @@
 node_modules
 temp
 build
-
+.DS_Store
 package-lock.json
