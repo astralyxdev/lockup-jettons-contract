@@ -8,10 +8,10 @@ export type JettonLockupConfig = {
 
 export function jettonLockupConfigToCell(config: JettonLockupConfig): Cell {
     return beginCell()
-        .storeAddress(config.owner)
+        .storeUint(0, 1)
         .storeAddress(config.receiver)
         .storeUint(Math.floor(config.unlockedAt), 64)
-        .storeUint(0, 1)
+        .storeAddress(config.owner)
         .endCell();
 }
 
