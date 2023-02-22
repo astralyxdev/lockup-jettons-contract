@@ -2,6 +2,14 @@ const querySearch = new URLSearchParams(window.location.search);
 const contractAddress = querySearch.get("address");
 const today = new Date().toISOString().slice(0, 16);
 
+const tonweb = new TonWeb(
+  new TonWeb.HttpProvider(
+      'https://' + (window.localStorage.getItem("testnet") === 'true' ? 'testnet.toncenter.com/api/v2/jsonRPC' : 'scalable-api.tonwhales.com/jsonRPC'),
+      {}
+  )
+);
+const Cell = tonweb.boc.Cell;
+
 let subdomain =
   window.localStorage.getItem("testnet") === "true" ? "testnet." : "";
 let currentTonWallets = [];
@@ -101,6 +109,7 @@ const getContractTonBalance = async (
       image: icon,
       decimals: 9,
     },
+    isNative: true
   };
 };
 
@@ -130,25 +139,21 @@ const getContractJettonsBalance = async (
         image,
         decimals,
       },
+      isNative: false
     };
   });
 };
 
 const getContractInfo = async () => {
-  const result = await fetch(
-    `https://${subdomain}toncenter.com/api/v2/runGetMethod`,
-    {
-      headers: {
-        ["Content-Type"]: "application/json",
-      },
-      body: JSON.stringify({
-        address: contractAddress,
-        method: "lockup_data",
-        stack: [],
-      }),
-      method: "POST",
-    }
-  ).then((res) => res.json());
+  console.log(contractAddress);
+  let result = await tonweb.provider.call2(contractAddress, 'lockup_data');
+  let owner = result[0].beginParse().loadAddress();
+  let receiver = result[1].beginParse().loadAddress();
+  return {
+    owner: owner ? owner.toString(1, 1, 1) : null,
+    receiver: receiver ? receiver.toString(1, 1, 1) : null,
+    unlockedAt: parseInt(result[2].toString()),
+  };
 };
 
 const payTypeChanged = () => {
@@ -221,6 +226,113 @@ const onAmountChange = () => {
   }
 
   inputEl.value = newValue;
+};
+
+const depositFunds = async (symbol, amount) => {
+  if (userData.balances[symbol].balance < amount) {
+    alert("Insufficient funds");
+    return;
+  }
+
+  if (userData.balances[symbol].isNative) { // if this TON
+    let query = {
+        to: contractAddress,
+        value: tonweb.utils.toNano(amount.toString())
+    };
+
+    await window.ton.send('ton_sendTransaction', [query]);
+  } else { // work with jettons
+    let msgBody = new Cell();
+    msgBody.bits.writeUint(0xf8a7ea5, 32);
+    msgBody.bits.writeUint(0, 64);
+    msgBody.bits.writeCoins(new tonweb.utils.BN('AMOUNT'));
+    msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // destination address
+    msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // gas response address
+    msgBody.bits.writeUint(0, 1);
+    msgBody.bits.writeCoins(new tonweb.utils.BN('0.05'));
+    msgBody.bits.writeUint(0, 1);
+
+    let query = {
+        to: new tonweb.Address(userData.balances[symbol].walletAddress),
+        value: tonweb.utils.toNano('0.1'),
+        data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false)),
+        dataType: 'boc',
+    };
+
+    await window.ton.send('ton_sendTransaction', [query]);
+  }
+}
+
+const withdrawFunds = async (symbol, targetAddress, amount) => {
+  if (contractData.balances[symbol].balance < amount) {
+    alert("Insufficient funds");
+    return;
+  }
+
+  if (contractData.balances[symbol].isNative) { // if this TON
+    let msgBody = new Cell();
+    msgBody.bits.writeAddress(new tonweb.Address(targetAddress));
+    msgBody.bits.writeCoins(tonweb.utils.toNano(amount.toString()));
+
+    let payload = new Cell();
+    payload.bits.writeUint(0xb5de5f9e, 32);
+    payload.bits.writeUint(0, 64);
+    payload.refs.push(msgBody);
+
+    let query = {
+        to: contractAddress,
+        value: tonweb.utils.toNano('0.05'),
+        data: tonweb.utils.bytesToBase64(await payload.toBoc(false)),
+        dataType: 'boc',
+    };
+
+    await window.ton.send('ton_sendTransaction', [query]);
+  } else { // work with jettons
+    let transferMsgBody = new Cell();
+    msgBody.bits.writeUint(0xf8a7ea5, 32);
+    msgBody.bits.writeUint(0, 64);
+    msgBody.bits.writeCoins(new tonweb.utils.BN('AMOUNT'));
+    msgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // destination address
+    msgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // gas response address
+    msgBody.bits.writeUint(0, 1);
+    msgBody.bits.writeCoins(new tonweb.utils.BN('0.001'));
+    msgBody.bits.writeUint(0, 1);
+
+    let msgBody = new Cell();
+    msgBody.bits.writeAddress(new tonweb.Address(contractData.balances[symbol].walletAddress));
+    msgBody.bits.writeCoins(tonweb.utils.toNano('0.05'));
+    msgBody.refs.push(transferMsgBody);
+
+    let payload = new Cell();
+    payload.bits.writeUint(0xb5de5f9e, 32);
+    payload.bits.writeUint(0, 64);
+    payload.refs.push(msgBody);
+
+    let query = {
+        to: new tonweb.Address(contractAddress),
+        value: tonweb.utils.toNano('0.06'),
+        data: tonweb.utils.bytesToBase64(await payload.toBoc(false)),
+        dataType: 'boc',
+    };
+
+    await window.ton.send('ton_sendTransaction', [query]);
+  }
+};
+
+const extendUnlockTime = async (extendValue) => {
+  let payload = new Cell();
+    payload.bits.writeUint(0xceba1400, 32);
+    payload.bits.writeUint(0, 64);
+    payload.bits.writeUint(extendValue, 64);
+
+    let query = {
+        to: new tonweb.Address(contractAddress),
+        value: tonweb.utils.toNano('0.05'),
+        data: tonweb.utils.bytesToBase64(await payload.toBoc(false)),
+        dataType: 'boc',
+    };
+
+    await window.ton.send('ton_sendTransaction', [query]);
 };
 
 window.addEventListener("DOMContentLoaded", () => {
