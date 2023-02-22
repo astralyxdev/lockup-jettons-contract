@@ -56,10 +56,10 @@ describe('JettonLockup', () => {
                 unlockedAt: (Date.now() / 1000) + 5,
             }, jettonLockupCode)
         );
-        await blockchain.setVerbosityForAddress(jettonLockup.address, {
-            blockchainLogs: true,
-            vmLogs: 'vm_logs',
-        })
+        // await blockchain.setVerbosityForAddress(jettonLockup.address, {
+        //     blockchainLogs: true,
+        //     vmLogs: 'vm_logs',
+        // })
         deployResult = await jettonLockup.sendDeploy(owner.getSender());
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
@@ -238,5 +238,112 @@ describe('JettonLockup', () => {
                 .storeRef(accountData).endCell(),
             success: true,
         });
+    });
+
+    it('extend lock time & can\'t withdraw after', async () => {
+        let extendResult = await owner.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0xceba1400, 32)
+                .storeUint(0, 64)
+                .storeUint(1800, 64)
+                .endCell()
+        });
+        expect(extendResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: jettonLockup.address,
+            success: true
+        });
+
+        let withdrawResult = await receiver.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0xb5de5f9e, 32)
+                .storeUint(0, 64)
+                .storeRef(
+                    beginCell()
+                        .storeAddress(lockupWalletAddress)
+                        .storeCoins(toNano('0.05'))
+                        .storeRef(
+                            beginCell()
+                                .storeUint(0xf8a7ea5, 32)
+                                .storeUint(0, 64)
+                                .storeCoins(toNano('300'))
+                                .storeAddress(receiver.address)
+                                .storeAddress(receiver.address)
+                                .storeUint(0, 1)
+                                .storeCoins(1)
+                                .storeUint(0, 1)
+                                .endCell()
+                        )
+                        .endCell()
+                )
+                .endCell()
+        });
+        expect(withdrawResult.transactions).toHaveTransaction({
+            from: receiver.address,
+            to: jettonLockup.address,
+            success: false
+        });
+        let {stack} = (await blockchain.getContract(lockupWalletAddress)).get('get_wallet_data');
+        if (stack[0].type == 'int') {
+            console.log("Jettons in lockup: ", stack[0].value);
+            expect(stack[0].value / BigInt(10 ** 9)).toBe(500n);
+        }
+    });
+
+    it('edit owner & try extend time', async () => {
+        let changeResult = await owner.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0xf6d29301, 32)
+                .storeUint(0, 64)
+                .storeAddress(null)
+                .endCell()
+        });
+        expect(changeResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: jettonLockup.address,
+            success: true
+        });
+
+        let extendResult = await owner.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0xceba1400, 32)
+                .storeUint(0, 64)
+                .storeUint(1800, 64)
+                .endCell()
+        });
+        expect(extendResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: jettonLockup.address,
+            success: false
+        });
+    });
+
+    it('edit receiver', async () => {
+        let changeResult = await receiver.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0x16b628bf, 32)
+                .storeUint(0, 64)
+                .storeAddress(owner.address)
+                .endCell()
+        });
+        expect(changeResult.transactions).toHaveTransaction({
+            from: receiver.address,
+            to: jettonLockup.address,
+            success: true
+        });
+
+        let { stack } = (await blockchain.getContract(jettonLockup.address)).get('lockup_data');
+        if (stack[1].type !== 'slice') throw new Error('Invalid lockup data');
+        expect(stack[1].cell.beginParse().loadAddress().toString()).toBe(owner.address.toString());
     });
 });
