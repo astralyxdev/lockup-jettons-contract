@@ -115,7 +115,6 @@ const createContract = () => {
       unlockedAt: unblockTime,
     });
     let contractAddress = (await contract.getAddress()).toString(1, 1, 1);
-    console.log("contractAddress", contractAddress);
 
     let payload = new Cell();
     payload.bits.writeUint(0xd53276db, 32);
