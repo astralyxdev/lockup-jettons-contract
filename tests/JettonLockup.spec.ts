@@ -56,10 +56,6 @@ describe('JettonLockup', () => {
                 unlockedAt: (Date.now() / 1000) + 5,
             }, jettonLockupCode)
         );
-        // await blockchain.setVerbosityForAddress(jettonLockup.address, {
-        //     blockchainLogs: true,
-        //     vmLogs: 'vm_logs',
-        // })
         deployResult = await jettonLockup.sendDeploy(owner.getSender());
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
