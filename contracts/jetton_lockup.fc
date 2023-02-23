@@ -1,18 +1,18 @@
 ;; Jetton Lockup Contract v1 by delpydoc@astralyx.dev
 
 ;; Storage TL-B Scheme;
-;; storage#_ jetton_balances: (HasmapE 256 Coins) receiver_address:MsgIntAddress unlocked_at:uint64 owner_address:MsgIntAddress = Storage;
+;; storage#_ jetton_balances: (HasmapE 256 Coins) owner_address:MsgIntAddress receiver_address:MsgIntAddress unlocked_at:uint64 = Storage;
 
 #include "imports/stdlib.fc";
 #include "imports/constants.fc";
 
-() save_data(cell jetton_balances, slice receiver_address, int unlocked_at, slice owner_address) impure inline {
+() save_data(cell jetton_balances, slice owner_address, slice receiver_address, int unlocked_at) impure inline {
     set_data(
         begin_cell()
             .store_dict(jetton_balances)
+            .store_slice(owner_address)
             .store_slice(receiver_address)
             .store_uint(unlocked_at, 64)
-            .store_slice(owner_address)
             .end_cell()
     );
 }
@@ -24,9 +24,7 @@
     (int sender_wc, int sender_hashpart) = parse_std_addr(sender_address);
     throw_unless(333, sender_wc == workchain); ;; force chain
 
-    if (flags & 1) { ;; bounced messages
-        return ();
-    }
+    if (flags & 1) { return (); } ;; bounced messages
 
     int op = in_msg_body~load_uint(32);
     int query_id = in_msg_body~load_uint(64);
@@ -52,50 +50,58 @@
     }
 
     slice ds = get_data().begin_parse();
-    (cell jetton_balances, slice receiver_address, int unlocked_at, slice owner_address) = (
-        ds~load_dict(),
-        ds~load_msg_addr(),
-        ds~load_uint(64),
-        ds~load_msg_addr()
+    (cell jetton_balances, slice owner_address, slice receiver_address, int unlocked_at) = (
+        ds~load_dict(), ds~load_msg_addr(), ds~load_msg_addr(), ds~load_uint(64)
     );
 
-    if (op == op::transfer_notification) {
-        if (jetton_balances.cell_depth() <= 10) { ;; dict overgas protection
-            (slice vs, int found?) = jetton_balances.udict_get?(256, sender_hashpart);
-            int stored_value = found? ? vs~load_coins() : 0;
-            stored_value += in_msg_body~load_coins();
+    if (jetton_balances.null?()) { ;; contract has not yet been initialized
+        cell supported_jettons = in_msg_body~load_dict();
+        do {
+            (supported_jettons, int wallet_hashpart, _, int f?) = supported_jettons.udict_delete_get_min(256);
+            if (f?) {
+                jetton_balances~udict_set_builder(
+                    256, wallet_hashpart,
+                    begin_cell()
+                        .store_coins(0)
+                );
+            }
+        } until (~ f?);
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
+        return ();
+    }
 
-            ;; store amount of incoming tokens for processing by other smart contracts
-            jetton_balances~udict_set_builder(
-                256, sender_hashpart,
-                begin_cell()
-                    .store_coins(stored_value)
-            );
-            save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
-        }
+    if (op == op::excesses) { return (); }
+    if (op == op::transfer_notification) {
+        (slice vs, int found?) = jetton_balances.udict_get?(256, sender_hashpart);
+        throw_unless(404, found?);
+        ;; store amount of incoming tokens for processing by other smart contracts
+        jetton_balances~udict_set_builder(
+            256, sender_hashpart,
+            begin_cell()
+                .store_coins(vs~load_coins() + in_msg_body~load_coins())
+        );
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
 
     if (op == "edit_owner"c) {
         throw_unless(401, equal_slices(sender_address, owner_address));
         owner_address = in_msg_body~load_msg_addr();
-        save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
     if (op == "edit_receiver"c) {
         throw_unless(401, equal_slices(sender_address, receiver_address));
         receiver_address = in_msg_body~load_msg_addr();
-        save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
     if (op == "extend_lock"c) {
         throw_unless(401, equal_slices(sender_address, owner_address));
-        int extension_time = in_msg_body~load_uint(64);
-        unlocked_at += extension_time;
-        save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
+        int unlocked_at = max(in_msg_body~load_uint(64), unlocked_at);
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
-    if (op == op::excesses) { return (); }
     if (op == "withdraw"c) {
         throw_unless(401, equal_slices(sender_address, receiver_address));
         throw_unless(402, unlocked_at <= now());
@@ -115,14 +121,12 @@
                 if ((op == op::transfer) | (op == op::burn)) {
                     ;; if yes, update the onchain information about balances
                     ms~skip_bits(64);
-                    int amount = ms~load_coins();
-                    int stored_amount = vs~load_coins();
-                    amount = max(stored_amount - amount, 0);
-
                     jetton_balances~udict_set_builder(
                         256, target_hashpart,
                         begin_cell()
-                            .store_coins(amount)
+                            .store_coins(
+                                max(vs~load_coins() - ms~load_coins(), 0)
+                            )
                     );
                 }
             }
@@ -142,28 +146,19 @@
             send_raw_message(msg.end_cell(), 0);
         }
 
-        save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
+        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
 
-    return ();
-
+    throw(0xffff);
 }
 
 ;; GET methods
 
 (slice, slice, int, cell) lockup_data() method_id {
     slice ds = get_data().begin_parse();
-    (cell jetton_balances, slice receiver_address, int unlocked_at, slice owner_address) = (
-        ds~load_dict(),
-        ds~load_msg_addr(),
-        ds~load_uint(64),
-        ds~load_msg_addr()
+    (cell jetton_balances, slice owner_address, slice receiver_address, int unlocked_at) = (
+        ds~load_dict(), ds~load_msg_addr(), ds~load_msg_addr(), ds~load_uint(64)
     );
-    return (
-        owner_address,
-        receiver_address,
-        unlocked_at,
-        jetton_balances
-    );
+    return (owner_address, receiver_address, unlocked_at, jetton_balances);
 }
