@@ -3,7 +3,7 @@
 ;; Storage TL-B Scheme;
 ;; storage#_ jetton_balances: (HasmapE 256 Coins) receiver_address:MsgIntAddress unlocked_at:uint64 owner_address:MsgIntAddress = Storage;
 
-;; #include "imports/stdlib.fc";
+#include "imports/stdlib.fc";
 #include "imports/constants.fc";
 
 () save_data(cell jetton_balances, slice receiver_address, int unlocked_at, slice owner_address) impure inline {
