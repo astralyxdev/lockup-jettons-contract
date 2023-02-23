@@ -46,5 +46,5 @@ storage#_ jetton_balances: (HashmapE 256 (VarUInteger 16)) receiver_address:MsgA
 lockup_data query_id:uint64 = InternalMsgBody;
 edit_owner query_id:uint64 owner:MsgAddress = InternalMsgBody;
 edit_receiver query_id:uint64 owner:MsgAddress = InternalMsgBody;
-extend_lock query_id:uint64 extend_time:uint64 = InternalMsgBody;
+extend_lock query_id:uint64 new_timestamp:uint64 = InternalMsgBody;
 withdraw query_id:uint64 target_address:MsgAddressInt amount:(VarUInteger 16) target_payload:(Maybe ^Cell) = InternalMsgBody;
