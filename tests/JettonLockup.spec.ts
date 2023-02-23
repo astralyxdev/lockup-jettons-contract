@@ -241,6 +241,7 @@ describe('JettonLockup', () => {
     });
 
     it('extend lock time & can\'t withdraw after', async () => {
+        let storedTimer = (await jettonLockup.getLockupData())[2];
         let extendResult = await owner.send({
             'to': jettonLockup.address,
             'value': toNano('0.1'),
@@ -248,6 +249,17 @@ describe('JettonLockup', () => {
                 .storeUint(0xceba1400, 32)
                 .storeUint(0, 64)
                 .storeUint(1800, 64)
+                .endCell()
+        });
+        expect(storedTimer).toBe((await jettonLockup.getLockupData())[2]);
+
+        extendResult = await owner.send({
+            'to': jettonLockup.address,
+            'value': toNano('0.1'),
+            'body': beginCell()
+                .storeUint(0xceba1400, 32)
+                .storeUint(0, 64)
+                .storeUint(storedTimer + 1800, 64)
                 .endCell()
         });
         expect(extendResult.transactions).toHaveTransaction({

@@ -3,7 +3,7 @@
 ;; Storage TL-B Scheme;
 ;; storage#_ jetton_balances: (HasmapE 256 Coins) receiver_address:MsgIntAddress unlocked_at:uint64 owner_address:MsgIntAddress = Storage;
 
-#include "imports/stdlib.fc";
+;; #include "imports/stdlib.fc";
 #include "imports/constants.fc";
 
 () save_data(cell jetton_balances, slice receiver_address, int unlocked_at, slice owner_address) impure inline {
@@ -90,8 +90,7 @@
     }
     if (op == "extend_lock"c) {
         throw_unless(401, equal_slices(sender_address, owner_address));
-        int extension_time = in_msg_body~load_uint(64);
-        unlocked_at += extension_time;
+        int unlocked_at = max(in_msg_body~load_uint(64), unlocked_at);
         save_data(jetton_balances, receiver_address, unlocked_at, owner_address);
         return ();
     }
