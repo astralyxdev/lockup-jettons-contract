@@ -1,25 +1,9 @@
 import { Blockchain, OpenedContract, TreasuryContract } from '@ton-community/sandbox';
-import { beginCell, Cell, toNano, fromNano, Address, Dictionary, DictionaryValue } from 'ton-core';
-import { JettonLockup } from '../wrappers/JettonLockup';
+import { beginCell, Cell, toNano, fromNano, Address, Dictionary } from 'ton-core';
+import { JettonLockup, BalanceValue, BalancesValue } from '../wrappers/JettonLockup';
 import '@ton-community/test-utils';
 import { compile } from '@ton-community/blueprint';
 import { JettonRoot } from "../wrappers/JettonRoot";
-
-export type BalanceValue = {
-    balance: bigint
-};
-
-const BalancesValue: DictionaryValue<BalanceValue> = {
-    serialize: (src: BalanceValue, builder) => {
-        builder
-            .storeCoins(src.balance)
-    },
-    parse: (src) => {
-        return {
-            balance: src.loadCoins(),
-        }
-    },
-}
 
 describe('JettonLockup', () => {
     let jettonLockupCode: Cell;
@@ -42,6 +26,8 @@ describe('JettonLockup', () => {
                     owner: owner.address,
                 }
             ));
+        
+
         let deployResult = await jettonRoot.sendDeploy(owner.getSender());
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
@@ -56,7 +42,7 @@ describe('JettonLockup', () => {
                 unlockedAt: (Date.now() / 1000) + 5,
             }, jettonLockupCode)
         );
-        deployResult = await jettonLockup.sendDeploy(owner.getSender());
+        deployResult = await jettonLockup.sendDeploy(owner.getSender(), [await jettonRoot.getWalletAddress(jettonLockup.address)]);
         expect(deployResult.transactions).toHaveTransaction({
             from: owner.address,
             to: jettonLockup.address,
@@ -94,6 +80,7 @@ describe('JettonLockup', () => {
     it('should put jettons in lockup', async () => {
         let ownerWalletAddress = await jettonRoot.getWalletAddress(owner.address);
         lockupWalletAddress = await jettonRoot.getWalletAddress(jettonLockup.address);
+        console.log("Sending jettons to lockup");
         let sendResult = await owner.send({
             'to': ownerWalletAddress,
             'value': toNano('0.1'),
