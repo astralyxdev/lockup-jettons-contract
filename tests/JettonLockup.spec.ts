@@ -77,7 +77,7 @@ describe('JettonLockup', () => {
         });
     });
 
-    it('put jettons in lockup', async () => {
+    it('should put jettons in lockup', async () => {
         let ownerWalletAddress = await jettonRoot.getWalletAddress(owner.address);
         lockupWalletAddress = await jettonRoot.getWalletAddress(jettonLockup.address);
         console.log("Sending jettons to lockup");
@@ -112,7 +112,7 @@ describe('JettonLockup', () => {
         expect(storedJettonBalance).toBe(1000000000000n);
     });
 
-    it('can\'t withdraw locked coins', async () => {
+    it('shouldn\'t withdraw locked coins', async () => {
         let withdrawResult = await receiver.send({
             'to': jettonLockup.address,
             'value': toNano('0.1'),
@@ -152,7 +152,7 @@ describe('JettonLockup', () => {
     });
 
     jest.setTimeout(10000);
-    it('withdraw locked coins after lock', async () => {
+    it('should withdraw locked coins after lock', async () => {
         await new Promise(f => setTimeout(f, 5000));
         let withdrawResult = await receiver.send({
             'to': jettonLockup.address,
@@ -199,7 +199,7 @@ describe('JettonLockup', () => {
         expect(storedJettonBalance).toBe(500000000000n);
     });
 
-    it('lockup can drop onchain data', async () => {
+    it('lockup should drop onchain data', async () => {
         let requestResult = await receiver.send({
             'to': jettonLockup.address,
             'value': toNano('0.2'),
@@ -222,8 +222,8 @@ describe('JettonLockup', () => {
             success: true,
         });
     });
-
-    it('extend lock time & can\'t withdraw after', async () => {
+    
+    it('should extend lock time & can\'t withdraw after', async () => {
         let storedTimer = (await jettonLockup.getLockupData())[2];
         let extendResult = await owner.send({
             'to': jettonLockup.address,
@@ -289,7 +289,7 @@ describe('JettonLockup', () => {
         }
     });
 
-    it('edit owner & try extend time', async () => {
+    it('should change owner', async () => {
         let changeResult = await owner.send({
             'to': jettonLockup.address,
             'value': toNano('0.1'),
@@ -304,7 +304,9 @@ describe('JettonLockup', () => {
             to: jettonLockup.address,
             success: true
         });
+    });
 
+    it('should extend time', async () => {
         let extendResult = await owner.send({
             'to': jettonLockup.address,
             'value': toNano('0.1'),
@@ -319,9 +321,9 @@ describe('JettonLockup', () => {
             to: jettonLockup.address,
             success: false
         });
-    });
+    })
 
-    it('edit receiver', async () => {
+    it('should edit receiver', async () => {
         let changeResult = await receiver.send({
             'to': jettonLockup.address,
             'value': toNano('0.1'),
