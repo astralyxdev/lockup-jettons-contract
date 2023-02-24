@@ -1,3 +1,5 @@
+let retrySwitch = true;
+
 const createElementFromHTML = (htmlString) => {
   const div = document.createElement("div");
   div.innerHTML = htmlString.trim();
@@ -14,6 +16,14 @@ const switchNetStatus = () => {
 
 const drawSwitch = () => {
   if (!window.ton) {
+    if (retrySwitch) {
+      retrySwitch = false;
+
+      setTimeout(() => {
+        drawSwitch();
+      }, 1000);
+    }
+
     return;
   }
 
