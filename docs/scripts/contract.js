@@ -10,7 +10,7 @@ const tonweb = new TonWeb(
       (window.localStorage.getItem("testnet") === "true"
         ? "testnet.toncenter.com/api/v2/jsonRPC"
         : "scalable-api.tonwhales.com/jsonRPC"),
-    {}
+    {apiKey: "971e995b76a2eb21dd0a8a34aec087a75597c27a4fe4f743fb0bcf02a42bfb23"}
   )
 );
 const Cell = tonweb.boc.Cell;
@@ -167,8 +167,15 @@ const getContractJettonsBalance = async (
 
 const getContractInfo = async () => {
   let result = await tonweb.provider.call2(contractAddress, "lockup_data");
-  let owner = result[0].beginParse().loadAddress();
-  let receiver = result[1].beginParse().loadAddress();
+  let owner, receiver;
+  try {
+    tonweb.boc.CellParser.loadUint(result[0], 11)
+    owner = new tonweb.utils.Address('0:' + tonweb.boc.CellParser.loadUint(result[0], 256).toString(16));
+  } catch (e) {
+    owner = null;
+  }
+  tonweb.boc.CellParser.loadUint(result[1], 11)
+  receiver = new tonweb.utils.Address('0:' + tonweb.boc.CellParser.loadUint(result[1], 256).toString(16));
 
   contractData.metadata = {
     owner: owner ? owner.toString(1, 1, 1) : null,
@@ -304,11 +311,17 @@ const depositFunds = async (symbol, amount) => {
 
   if (userData.balances[symbol].isNative) {
     // if this TON
+    let msgBody = new Cell();
+    msgBody.bits.writeUint(0xd53276db, 32);
+    msgBody.bits.writeUint(0, 64);
+
     let query = {
       to: contractAddress,
       value: toPlainString(
         amount * 10 ** userData.balances[symbol].metadata.decimals
       ),
+      dataType: 'boc',
+      data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false))
     };
 
     await window.ton.send("ton_sendTransaction", [query]);
@@ -317,18 +330,18 @@ const depositFunds = async (symbol, amount) => {
     let msgBody = new Cell();
     msgBody.bits.writeUint(0xf8a7ea5, 32);
     msgBody.bits.writeUint(0, 64);
-    msgBody.bits.writeCoins(new tonweb.utils.BN("AMOUNT"));
+    msgBody.bits.writeCoins(new tonweb.utils.BN(toPlainString(
+      amount * 10 ** userData.balances[symbol].metadata.decimals
+    )));
     msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // destination address
     msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // gas response address
     msgBody.bits.writeUint(0, 1);
-    msgBody.bits.writeCoins(new tonweb.utils.BN("0.05"));
+    msgBody.bits.writeCoins(tonweb.utils.toNano("0.1"));
     msgBody.bits.writeUint(0, 1);
 
     let query = {
-      to: new tonweb.Address(userData.balances[symbol].walletAddress),
-      value: toPlainString(
-        amount * 10 ** userData.balances[symbol].metadata.decimals
-      ),
+      to: new tonweb.Address(userData.balances[symbol].walletAddress).toString(1, 1, 1),
+      value: parseInt(tonweb.utils.toNano("0.15").toString()),
       data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false)),
       dataType: "boc",
     };
@@ -365,20 +378,23 @@ const withdrawFunds = async (symbol, targetAddress, amount) => {
   } else {
     // work with jettons
     let transferMsgBody = new Cell();
-    msgBody.bits.writeUint(0xf8a7ea5, 32);
-    msgBody.bits.writeUint(0, 64);
-    msgBody.bits.writeCoins(new tonweb.utils.BN("AMOUNT"));
-    msgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // destination address
-    msgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // gas response address
-    msgBody.bits.writeUint(0, 1);
-    msgBody.bits.writeCoins(new tonweb.utils.BN("0.001"));
-    msgBody.bits.writeUint(0, 1);
+    transferMsgBody.bits.writeUint(0xf8a7ea5, 32);
+    transferMsgBody.bits.writeUint(0, 64);
+    transferMsgBody.bits.writeCoins(new tonweb.utils.BN(toPlainString(
+      amount * 10 ** userData.balances[symbol].metadata.decimals
+    )));
+    transferMsgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // destination address
+    transferMsgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // gas response address
+    transferMsgBody.bits.writeUint(0, 1);
+    transferMsgBody.bits.writeCoins(tonweb.utils.toNano("0.001"));
+    transferMsgBody.bits.writeUint(0, 1);
 
     let msgBody = new Cell();
     msgBody.bits.writeAddress(
       new tonweb.Address(contractData.balances[symbol].walletAddress)
     );
     msgBody.bits.writeCoins(tonweb.utils.toNano("0.05"));
+    msgBody.bits.writeUint(1, 1);
     msgBody.refs.push(transferMsgBody);
 
     let payload = new Cell();
@@ -387,8 +403,8 @@ const withdrawFunds = async (symbol, targetAddress, amount) => {
     payload.refs.push(msgBody);
 
     let query = {
-      to: new tonweb.Address(contractAddress),
-      value: tonweb.utils.toNano("0.06"),
+      to: new tonweb.Address(contractAddress).toString(1, 1, 1),
+      value: parseInt(tonweb.utils.toNano("0.06").toString()),
       data: tonweb.utils.bytesToBase64(await payload.toBoc(false)),
       dataType: "boc",
     };
