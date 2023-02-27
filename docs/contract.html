@@ -27,23 +27,29 @@
               <span id="contractId">...</span>
             </div>
           </div>
-          <div class="contract__text__wrapper" id="unblockTimeWrapper">
+          <div class="contract__text__wrapper">
             <div class="contract__text"><span>Unblock time:</span></div>
             <div class="contract__description">
               <span id="unblockTime">...</span>
             </div>
           </div>
           <div class="contract__text__wrapper">
-            <div class="contract__text"><span>From -> To:</span></div>
+            <div class="contract__text"><span>From:</span></div>
             <div class="contract__description">
-              <span id="fromTo">...</span>
+              <span id="from">...</span>
+            </div>
+          </div>
+          <div class="contract__text__wrapper">
+            <div class="contract__text"><span>To:</span></div>
+            <div class="contract__description">
+              <span id="to">...</span>
             </div>
           </div>
         </div>
         <div class="actions__wrapper">
           <div class="actions__block">
             <div class="block__text">
-              <span>Withdraw</span>
+              <span>Pay</span>
               <label class="switch__wrapper">
                 <input
                   type="checkbox"
@@ -52,10 +58,10 @@
                 />
                 <span class="switch__slider"></span>
               </label>
-              <span>Pay</span>
+              <span>Withdraw</span>
             </div>
             <div class="form">
-              <div class="form__token">
+              <div class="form__token" id="amountInputWrapper">
                 <input
                   placeholder="Amount"
                   class="input"
@@ -73,18 +79,22 @@
                   </select>
                 </div>
               </div>
-              <div class="form__amount">
+              <div class="form__amount" id="walletBalanceWrapper">
                 <span id="walletBalance"></span>
               </div>
               <div class="form__button">
                 <button
                   class="button button--large button--primary"
                   id="payFormButton"
+                  onclick="return operationButton()"
                 ></button>
               </div>
             </div>
           </div>
-          <div class="actions__block">
+          <div
+            class="actions__block actions__block_hidden"
+            id="updateTimeBlock"
+          >
             <div class="block__text">
               <span>Change unblock time</span>
             </div>
@@ -105,6 +115,16 @@
                   Change
                 </button>
               </div>
+            </div>
+          </div>
+          <div class="actions__block">
+            <div class="form__button">
+              <button
+                class="button button--large button--secondary"
+                onclick="return goHome()"
+              >
+                Home
+              </button>
             </div>
           </div>
         </div>

@@ -28,6 +28,10 @@
   max-width: 100%;
 }
 
+.actions__block_hidden {
+  display: none;
+}
+
 .contract__text__wrapper {
   display: flex;
   flex-direction: column;
@@ -86,9 +90,22 @@
 }
 
 .form__button {
-  margin-top: 10px;
   display: flex;
   align-items: center;
+}
+
+#updateTimeBlock .form__token,
+.form__amount > span:not(:empty) {
+  margin-bottom: 10px;
+}
+
+.form__amount > span:not(:empty) {
+  display: block;
+}
+
+.form__amount:empty,
+.form__amount > span:empty {
+  display: none;
 }
 
 .form__button .button {
