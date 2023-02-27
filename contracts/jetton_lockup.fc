@@ -73,14 +73,40 @@
     if (op == op::excesses) { return (); }
     if (op == op::transfer_notification) {
         (slice vs, int found?) = jetton_balances.udict_get?(256, sender_hashpart);
-        throw_unless(404, found?);
-        ;; store amount of incoming tokens for processing by other smart contracts
-        jetton_balances~udict_set_builder(
-            256, sender_hashpart,
-            begin_cell()
-                .store_coins(vs~load_coins() + in_msg_body~load_coins())
-        );
-        save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
+        if (found?) {
+            ;; store amount of incoming tokens for processing by other smart contracts
+            jetton_balances~udict_set_builder(
+                256, sender_hashpart,
+                begin_cell()
+                    .store_coins(vs~load_coins() + in_msg_body~load_coins())
+            );
+            save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
+        }
+        else {
+            ;; transfer unsupported tokens back
+            int amount = in_msg_body~load_coins();
+            slice from_address = in_msg_body~load_msg_addr();
+            send_raw_message(
+                begin_cell()
+                    .store_uint(0x18, 6)
+                    .store_slice(sender_address)
+                    .store_coins(0)
+                    .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+                    .store_ref(
+                        begin_cell()
+                            .store_uint(op::transfer, 32)
+                            .store_uint(query_id, 64)
+                            .store_coins(amount)
+                            .store_slice(from_address)
+                            .store_slice(from_address)
+                            .store_uint(0, 1)
+                            .store_coins(msg_value >= 50000000 ? msg_value - 50000000 : 0)
+                            .store_uint(0, 1)
+                            .end_cell()
+                    )
+                    .end_cell(), 64
+            );
+        }
         return ();
     }
 
@@ -112,7 +138,7 @@
             slice target_address = msg~load_msg_addr();
             (int target_wc, int target_hashpart) = parse_std_addr(target_address);
             int amount = msg~load_coins();
-            cell msg_body = msg~load_uint(1) == 1 ? msg~load_ref() : null();
+            cell msg_body = msg~load_maybe_ref();
             (slice vs, int found?) = jetton_balances.udict_get?(256, target_hashpart);
             ;; check whether this transaction affects the stored token balances
             if (found? & (~ null?(msg_body))) {
