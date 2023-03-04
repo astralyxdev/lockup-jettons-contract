@@ -239,7 +239,6 @@ const createContract = () => {
         }
       )
     );
-
     let query = {
       to: contractAddress,
       value: "50000000",
