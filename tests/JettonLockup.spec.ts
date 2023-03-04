@@ -222,7 +222,6 @@ describe('JettonLockup', () => {
             success: true,
         });
     });
-    
     it('should extend lock time & can\'t withdraw after', async () => {
         let storedTimer = (await jettonLockup.getLockupData())[2];
         let extendResult = await owner.send({

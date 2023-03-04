@@ -4,6 +4,18 @@
   border: none;
   padding: 14px 28px;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.1s linear;
+}
+
+.button:active {
+  transform: scale(0.95);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .input {
@@ -175,9 +187,34 @@
   left: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
+  z-index: 1;
+  padding: 10px;
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
 }
 
 .netSwitch span {
   font-weight: 700;
+}
+
+@media screen and (max-width: 1000px) {
+  .netSwitch {
+    position: static !important;
+    padding: 20px 20px 0px !important;
+    backdrop-filter: none !important;
+    border-radius: 0 !important;
+  }
+}
+
+@media screen and (max-width: 610px) {
+  .form {
+    padding: 40px 20px;
+    border-radius: 0;
+  }
+
+  .wrapper__in {
+    padding: 20px 0;
+    min-height: calc(100vh - 79px);
+  }
 }
