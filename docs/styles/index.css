@@ -64,17 +64,95 @@
   font-size: 24px;
 }
 
-@media screen and (max-width: 770px) {
-  .wrapper__in {
-    padding: 20px;
-    min-height: calc(100vh - 40px);
-  }
+.form__address_list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+.form__address_list:empty {
+  display: none;
+}
+
+.form__address_list_block {
+  border: 1px solid var(--input-stroke-dark);
+  box-sizing: border-box;
+  border-radius: 40px;
+
+  display: flex;
+  align-items: center;
+}
+
+.form__address_list,
+.form__address_list_block {
+  max-width: 100%;
+  width: 100%;
+}
+
+.form__address_list_block span {
+  flex: 1;
+  display: inline-block;
+  padding: 12px 0 12px 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.form__address_list_block .button {
+  min-width: fit-content;
+  width: fit-content;
+  height: fit-content;
+  padding: 0 24px;
+  background: none;
+  color: black;
+}
+
+.form__address_list_block .button:active {
+  transform: scale(0.9) !important;
+}
+
+.form__address_list_block .button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.form__add_address {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+@media screen and (max-width: 770px) {
   .form__address .input {
     min-width: 100%;
   }
 
   .form__address .button {
     flex: 1;
+  }
+
+  .form__address_list_block .button {
+    flex: 0;
+    padding: 0 12px;
+  }
+
+  .form__address_list_block span {
+    font-size: 14px;
+    padding: 12px 0 12px 12px;
+  }
+
+  .form__address_list_block {
+    border-radius: 12px;
+  }
+}
+
+@media screen and (min-width: 611px) and (max-width: 1000px) {
+  .wrapper__in {
+    padding: 20px !important;
+    min-height: calc(100vh - 79px);
   }
 }

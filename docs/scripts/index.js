@@ -1,12 +1,36 @@
 let currentForm = "main";
 let retry = true;
+let supportedJettons = ["EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"];
+
+const presetJettonAddresses = [
+  "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
+  "EQBj7uoIVsngmS-ayOz1nHENjZkjTt5mXB4uGa83hmcqq2wA",
+  "EQBiJ8dSbp3_YAb_KuC64zCrFqQTsFbUee5tbzr5el_HEDGE",
+  "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",
+  "EQB-ajMyi5-WKIgOHnbOGApfckUGbl6tDk3Qt8PKmb-xLAvp",
+  "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
+  "EQAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Eml6y",
+  "EQBl3gg6AAdjgjO2ZoNU5Q5EzUIl8XMNZrix8Z5dJmkHUfxI",
+  "EQC_1YoM8RBixN95lz7odcF3Vrkc_N8Ne7gQi7Abtlet_Efi",
+  "EQC61IQRl0_la95t27xhIpjxZt32vl1QQVF2UgTNuvD18W-4",
+  "EQBzyesZ3p1WGNrggNSJi6JFK3vr0GhqJp4gxker9oujjcuv",
+  "EQDCJL0iQHofcBBvFBHdVG233Ri2V4kCNFgfRT-gqAd3Oc86",
+  "EQCW5g1evnQN2OZZEVe-23aSvEsgPauWZlF27ZIz5REhnWRy",
+  "EQBCFwW8uFUh-amdRmNY9NyeDEaeDYXd9ggJGsicpqVcHq7B",
+];
+
+let selectedJettonAddresses = [];
+
 const tonweb = new TonWeb(
   new TonWeb.HttpProvider(
     "https://" +
       (window.localStorage.getItem("testnet") === "true"
         ? "testnet.toncenter.com/api/v2/jsonRPC"
         : "scalable-api.tonwhales.com/jsonRPC"),
-    {apiKey: "971e995b76a2eb21dd0a8a34aec087a75597c27a4fe4f743fb0bcf02a42bfb23"}
+    {
+      apiKey:
+        "971e995b76a2eb21dd0a8a34aec087a75597c27a4fe4f743fb0bcf02a42bfb23",
+    }
   )
 );
 const Cell = tonweb.boc.Cell;
@@ -29,6 +53,53 @@ class LockupJettonsContract extends tonweb.Contract {
   }
 }
 
+const resetCreateForm = () => {
+  document.getElementById("receiverAddress").value = "";
+  document.getElementById("unblockTime").value = "";
+  document.getElementById("canChangeTime").checked = "";
+  document.getElementById("newJettonAddress").value = "";
+};
+
+const resetMainForm = () => {
+  document.getElementById("contractAddress").value = "";
+};
+
+const renderSelectedAddresses = () => {
+  const selectedJettonAddressesContainer =
+    document.getElementById("addresses_list");
+
+  selectedJettonAddressesContainer.innerHTML = "";
+
+  selectedJettonAddresses.forEach((jettonAddress) => {
+    const jettonAddressNode = createElementFromHTML(
+      `<div class="form__address_list_block">
+          <span>${jettonAddress}</span>
+          <button
+            class="button button--secondary"
+            onclick="return removeJettonAddress('${jettonAddress}')"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M20.7071 4.70711C21.0976 4.31658 21.0976 3.68342 20.7071 3.29289C20.3166 2.90237 19.6834 2.90237 19.2929 3.29289L12 10.5858L4.70711 3.29289C4.31658 2.90237 3.68342 2.90237 3.29289 3.29289C2.90237 3.68342 2.90237 4.31658 3.29289 4.70711L10.5858 12L3.29289 19.2929C2.90237 19.6834 2.90237 20.3166 3.29289 20.7071C3.68342 21.0976 4.31658 21.0976 4.70711 20.7071L12 13.4142L19.2929 20.7071C19.6834 21.0976 20.3166 21.0976 20.7071 20.7071C21.0976 20.3166 21.0976 19.6834 20.7071 19.2929L13.4142 12L20.7071 4.70711Z"
+                fill="black"
+              />
+            </svg>
+          </button>
+      </div>`
+    );
+
+    selectedJettonAddressesContainer.appendChild(jettonAddressNode);
+  });
+};
+
 const today = new Date().toISOString().slice(0, 16);
 
 // ? Switch forms between create and check contracts
@@ -47,6 +118,11 @@ const switchForm = () => {
     currentForm = "create";
 
     document.getElementById("unblockTime").min = today;
+
+    selectedJettonAddresses = [...presetJettonAddresses];
+
+    resetMainForm();
+    renderSelectedAddresses();
   } else if (currentForm === "create") {
     document.querySelector(".form--main").classList.add("form--visible");
 
@@ -55,6 +131,8 @@ const switchForm = () => {
       .classList.remove("form--visible");
 
     currentForm = "main";
+
+    resetCreateForm();
   }
 };
 
@@ -66,7 +144,7 @@ const checkContract = () => {
     return;
   }
 
-  document.getElementById("contractAddress").value = "";
+  resetMainForm();
 
   openContractPage(contractAddress);
 };
@@ -120,39 +198,48 @@ const createContract = () => {
     payload.bits.writeUint(0xd53276db, 32);
     payload.bits.writeUint(0, 64);
 
-    let supportedJettons = ['EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c'];
-    supportedJettons.push('EQAqWrTypr6T7BG9L1neos39o6n_ER738gNqneseb9sX5sDI');
     let supportedJettonsMap = new tonweb.boc.HashMap(256);
-    for (i in supportedJettons) {
+
+    const finalSupportedJettons = supportedJettons.concat(
+      selectedJettonAddresses
+    );
+
+    for (i in finalSupportedJettons) {
       try {
-          let jettonRoot = new TonWeb.token.ft.JettonMinter(tonweb.provider, {address: new tonweb.utils.Address(supportedJettons[i])});;
-          jettonRoot = (await jettonRoot.getJettonWalletAddress(await contract.getAddress())).toString(1, 1, 1);
-          let jettonCell = new tonweb.boc.Cell();
-          jettonCell.bits.writeCoins(tonweb.utils.toNano("1"));
-          console.log(jettonRoot, jettonCell);
-          supportedJettonsMap.elements[jettonRoot] = jettonCell;
+        let jettonRoot = new TonWeb.token.ft.JettonMinter(tonweb.provider, {
+          address: new tonweb.utils.Address(finalSupportedJettons[i]),
+        });
+        jettonRoot = (
+          await jettonRoot.getJettonWalletAddress(await contract.getAddress())
+        ).toString(1, 1, 1);
+        let jettonCell = new tonweb.boc.Cell();
+        jettonCell.bits.writeCoins(tonweb.utils.toNano("1"));
+        console.log(jettonRoot, jettonCell);
+        supportedJettonsMap.elements[jettonRoot] = jettonCell;
       } catch (e) {
-          console.log(e);
-          let jettonRoot = supportedJettons[i];
-          let jettonCell = new tonweb.boc.Cell();
-          jettonCell.bits.writeCoins(tonweb.utils.toNano("1"));
-          console.log(jettonRoot, jettonCell);
-          supportedJettonsMap.elements[jettonRoot] = jettonCell;
+        console.log(e);
+        let jettonRoot = finalSupportedJettons[i];
+        let jettonCell = new tonweb.boc.Cell();
+        jettonCell.bits.writeCoins(tonweb.utils.toNano("1"));
+        console.log(jettonRoot, jettonCell);
+        supportedJettonsMap.elements[jettonRoot] = jettonCell;
       }
     }
-    
+
     payload.bits.writeUint(1, 1);
     payload.refs.push(
-        supportedJettonsMap.serialize(
-            (_e) => {
-                let c = new tonweb.boc.Cell();
-                c.bits.writeBytes(new tonweb.utils.Address(_e).hashPart);
-                return c;
-            },
-            (_e) => { return _e; }
-        )
+      supportedJettonsMap.serialize(
+        (_e) => {
+          let c = new tonweb.boc.Cell();
+          c.bits.writeBytes(new tonweb.utils.Address(_e).hashPart);
+          return c;
+        },
+        (_e) => {
+          return _e;
+        }
+      )
     );
-    
+
     let query = {
       to: contractAddress,
       value: "50000000",
@@ -168,11 +255,46 @@ const createContract = () => {
     if (payed === true) {
       openContractPage(contractAddress);
 
-      document.getElementById("receiverAddress").value = "";
-      document.getElementById("unblockTime").value = "";
-      document.getElementById("canChangeTime").checked = "";
+      resetCreateForm();
     }
   });
+};
+
+const removeJettonAddress = (addressToRemove) => {
+  const findJettonAddressIndex = selectedJettonAddresses.findIndex(
+    (jettonAddress) => {
+      return jettonAddress === addressToRemove;
+    }
+  );
+
+  if (findJettonAddressIndex < 0) {
+    return;
+  }
+
+  selectedJettonAddresses.splice(findJettonAddressIndex, 1);
+
+  renderSelectedAddresses();
+};
+
+const addJettonAddress = () => {
+  const newJettonAddressElement = document.getElementById("newJettonAddress");
+  const newJettonAddress = newJettonAddressElement.value;
+
+  if (!newJettonAddress) {
+    return;
+  }
+
+  const isJettonAdded = selectedJettonAddresses.findIndex((jettonAddress) => {
+    return jettonAddress === newJettonAddress;
+  });
+
+  if (isJettonAdded >= 0) {
+    return;
+  }
+
+  newJettonAddressElement.value = "";
+  selectedJettonAddresses.unshift(newJettonAddress);
+  renderSelectedAddresses();
 };
 
 const domLoaded = () => {

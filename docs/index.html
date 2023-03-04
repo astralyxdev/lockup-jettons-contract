@@ -67,6 +67,22 @@
               <span class="checkbox__checkmark"></span>
             </label>
           </div>
+          <div class="form__address">
+            <div class="form__add_address">
+              <input
+                class="input"
+                placeholder="Input jetton address"
+                id="newJettonAddress"
+              />
+              <button
+                class="button button--primary"
+                onclick="return addJettonAddress()"
+              >
+                Add
+              </button>
+            </div>
+            <div class="form__address_list" id="addresses_list"></div>
+          </div>
           <div class="form__create">
             <button
               class="button button--large button--primary"
