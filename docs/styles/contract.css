@@ -28,6 +28,10 @@
   max-width: 100%;
 }
 
+.actions__block .form {
+  padding: 0 !important;
+}
+
 .actions__block_hidden {
   display: none;
 }

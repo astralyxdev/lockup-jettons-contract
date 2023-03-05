@@ -10,7 +10,10 @@ const tonweb = new TonWeb(
       (window.localStorage.getItem("testnet") === "true"
         ? "testnet.toncenter.com/api/v2/jsonRPC"
         : "scalable-api.tonwhales.com/jsonRPC"),
-    {apiKey: "971e995b76a2eb21dd0a8a34aec087a75597c27a4fe4f743fb0bcf02a42bfb23"}
+    {
+      apiKey:
+        "971e995b76a2eb21dd0a8a34aec087a75597c27a4fe4f743fb0bcf02a42bfb23",
+    }
   )
 );
 const Cell = tonweb.boc.Cell;
@@ -169,13 +172,17 @@ const getContractInfo = async () => {
   let result = await tonweb.provider.call2(contractAddress, "lockup_data");
   let owner, receiver;
   try {
-    tonweb.boc.CellParser.loadUint(result[0], 11)
-    owner = new tonweb.utils.Address('0:' + tonweb.boc.CellParser.loadUint(result[0], 256).toString(16));
+    tonweb.boc.CellParser.loadUint(result[0], 11);
+    owner = new tonweb.utils.Address(
+      "0:" + tonweb.boc.CellParser.loadUint(result[0], 256).toString(16)
+    );
   } catch (e) {
     owner = null;
   }
-  tonweb.boc.CellParser.loadUint(result[1], 11)
-  receiver = new tonweb.utils.Address('0:' + tonweb.boc.CellParser.loadUint(result[1], 256).toString(16));
+  tonweb.boc.CellParser.loadUint(result[1], 11);
+  receiver = new tonweb.utils.Address(
+    "0:" + tonweb.boc.CellParser.loadUint(result[1], 256).toString(16)
+  );
 
   contractData.metadata = {
     owner: owner ? owner.toString(1, 1, 1) : null,
@@ -204,8 +211,20 @@ const getContractInfo = async () => {
     )}`;
   }
 
-  document.getElementById("from").innerText = contractData.metadata.owner;
-  document.getElementById("to").innerText = contractData.metadata.receiver;
+  document
+    .getElementById("from")
+    .replaceChildren(
+      createElementFromHTML(
+        `<a href="https://${subdomain}tonscan.org/address/${contractData.metadata.owner}" target="_blank">${contractData.metadata.owner}</a>`
+      )
+    );
+  document
+    .getElementById("to")
+    .replaceChildren(
+      createElementFromHTML(
+        `<a href="https://${subdomain}tonscan.org/address/${contractData.metadata.receiver}" target="_blank">${contractData.metadata.receiver}</a>`
+      )
+    );
 };
 
 const payTypeChanged = () => {
@@ -320,8 +339,8 @@ const depositFunds = async (symbol, amount) => {
       value: toPlainString(
         amount * 10 ** userData.balances[symbol].metadata.decimals
       ),
-      dataType: 'boc',
-      data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false))
+      dataType: "boc",
+      data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false)),
     };
 
     await window.ton.send("ton_sendTransaction", [query]);
@@ -330,9 +349,13 @@ const depositFunds = async (symbol, amount) => {
     let msgBody = new Cell();
     msgBody.bits.writeUint(0xf8a7ea5, 32);
     msgBody.bits.writeUint(0, 64);
-    msgBody.bits.writeCoins(new tonweb.utils.BN(toPlainString(
-      amount * 10 ** userData.balances[symbol].metadata.decimals
-    )));
+    msgBody.bits.writeCoins(
+      new tonweb.utils.BN(
+        toPlainString(
+          amount * 10 ** userData.balances[symbol].metadata.decimals
+        )
+      )
+    );
     msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // destination address
     msgBody.bits.writeAddress(new tonweb.Address(contractAddress)); // gas response address
     msgBody.bits.writeUint(0, 1);
@@ -340,7 +363,11 @@ const depositFunds = async (symbol, amount) => {
     msgBody.bits.writeUint(0, 1);
 
     let query = {
-      to: new tonweb.Address(userData.balances[symbol].walletAddress).toString(1, 1, 1),
+      to: new tonweb.Address(userData.balances[symbol].walletAddress).toString(
+        1,
+        1,
+        1
+      ),
       value: parseInt(tonweb.utils.toNano("0.15").toString()),
       data: tonweb.utils.bytesToBase64(await msgBody.toBoc(false)),
       dataType: "boc",
@@ -380,9 +407,13 @@ const withdrawFunds = async (symbol, targetAddress, amount) => {
     let transferMsgBody = new Cell();
     transferMsgBody.bits.writeUint(0xf8a7ea5, 32);
     transferMsgBody.bits.writeUint(0, 64);
-    transferMsgBody.bits.writeCoins(new tonweb.utils.BN(toPlainString(
-      amount * 10 ** userData.balances[symbol].metadata.decimals
-    )));
+    transferMsgBody.bits.writeCoins(
+      new tonweb.utils.BN(
+        toPlainString(
+          amount * 10 ** userData.balances[symbol].metadata.decimals
+        )
+      )
+    );
     transferMsgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // destination address
     transferMsgBody.bits.writeAddress(new tonweb.Address(targetAddress)); // gas response address
     transferMsgBody.bits.writeUint(0, 1);
@@ -479,7 +510,13 @@ const loadDOM = () => {
   }
 
   document.getElementById("updateUblockTime").min = today;
-  document.getElementById("contractId").innerText = contractAddress;
+  document
+    .getElementById("contractId")
+    .replaceChildren(
+      createElementFromHTML(
+        `<a href="https://${subdomain}tonscan.org/address/${contractAddress}" target="_blank">${contractAddress}</a>`
+      )
+    );
 
   document.getElementById("payFormButton").innerText = buttonType;
 
