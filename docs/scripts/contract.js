@@ -491,7 +491,7 @@ const extendUnlockTime = async (extendValue) => {
 };
 
 const goHome = () => {
-  window.location.pathname = "/";
+  window.location.pathname = "/lockup-jettons-contract/";
 };
 
 const loadDOM = () => {
@@ -504,7 +504,7 @@ const loadDOM = () => {
   }
 
   if (!contractAddress || (!window.ton && !contractRetry)) {
-    window.location = "/";
+    window.location = "/lockup-jettons-contract/";
 
     return;
   }
