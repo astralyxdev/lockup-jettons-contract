@@ -491,7 +491,15 @@ const extendUnlockTime = async (extendValue) => {
 };
 
 const goHome = () => {
-  window.location.pathname = "/lockup-jettons-contract/";
+  const isClearHTMLPage = window.location.pathname === "/contract.html";
+
+  if (isClearHTMLPage) {
+    window.location.pathname = "/";
+
+    return;
+  }
+
+  window.location.pathname = window.location.pathname.split("contract.html")[0];
 };
 
 const loadDOM = () => {
@@ -504,7 +512,7 @@ const loadDOM = () => {
   }
 
   if (!contractAddress || (!window.ton && !contractRetry)) {
-    window.location = "/lockup-jettons-contract/";
+    goHome();
 
     return;
   }
