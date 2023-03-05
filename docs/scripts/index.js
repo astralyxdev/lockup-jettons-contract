@@ -3,20 +3,76 @@ let retry = true;
 let supportedJettons = ["EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"];
 
 const presetJettonAddresses = [
-  "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
-  "EQBj7uoIVsngmS-ayOz1nHENjZkjTt5mXB4uGa83hmcqq2wA",
-  "EQBiJ8dSbp3_YAb_KuC64zCrFqQTsFbUee5tbzr5el_HEDGE",
-  "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",
-  "EQB-ajMyi5-WKIgOHnbOGApfckUGbl6tDk3Qt8PKmb-xLAvp",
-  "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
-  "EQAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Eml6y",
-  "EQBl3gg6AAdjgjO2ZoNU5Q5EzUIl8XMNZrix8Z5dJmkHUfxI",
-  "EQC_1YoM8RBixN95lz7odcF3Vrkc_N8Ne7gQi7Abtlet_Efi",
-  "EQC61IQRl0_la95t27xhIpjxZt32vl1QQVF2UgTNuvD18W-4",
-  "EQBzyesZ3p1WGNrggNSJi6JFK3vr0GhqJp4gxker9oujjcuv",
-  "EQDCJL0iQHofcBBvFBHdVG233Ri2V4kCNFgfRT-gqAd3Oc86",
-  "EQCW5g1evnQN2OZZEVe-23aSvEsgPauWZlF27ZIz5REhnWRy",
-  "EQBCFwW8uFUh-amdRmNY9NyeDEaeDYXd9ggJGsicpqVcHq7B",
+  {
+    name: "Huebel Bolt",
+    symbol: "BOLT",
+    addr: "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
+  },
+  {
+    name: "Grabscape game token",
+    symbol: "GRBS",
+    addr: "EQBj7uoIVsngmS-ayOz1nHENjZkjTt5mXB4uGa83hmcqq2wA",
+  },
+  {
+    name: "HEDGE coin",
+    symbol: "HEDGE",
+    addr: "EQBiJ8dSbp3_YAb_KuC64zCrFqQTsFbUee5tbzr5el_HEDGE",
+  },
+  {
+    name: "Scaleton",
+    symbol: "SCALE",
+    addr: "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",
+  },
+  {
+    name: "TonexCoin",
+    symbol: "TNX",
+    addr: "EQB-ajMyi5-WKIgOHnbOGApfckUGbl6tDk3Qt8PKmb-xLAvp",
+  },
+  {
+    name: "Ambra",
+    symbol: "AMBR",
+    addr: "EQCcLAW537KnRg_aSPrnQJoyYjOZkzqYp6FVmRUvN1crSazV",
+  },
+  {
+    name: "Tegro",
+    symbol: "TGR",
+    addr: "EQAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Eml6y",
+  },
+  {
+    name: "Lavandos",
+    symbol: "LAVE",
+    addr: "EQBl3gg6AAdjgjO2ZoNU5Q5EzUIl8XMNZrix8Z5dJmkHUfxI",
+  },
+  {
+    name: "Orbit Bridge Ton USD Tether",
+    symbol: "oUSDT",
+    addr: "EQC_1YoM8RBixN95lz7odcF3Vrkc_N8Ne7gQi7Abtlet_Efi",
+  },
+  {
+    name: "Orbit Bridge Ton USD Coin",
+    symbol: "oUSDC",
+    addr: "EQC61IQRl0_la95t27xhIpjxZt32vl1QQVF2UgTNuvD18W-4",
+  },
+  {
+    name: "TonTake",
+    symbol: "TAKE",
+    addr: "EQBzyesZ3p1WGNrggNSJi6JFK3vr0GhqJp4gxker9oujjcuv",
+  },
+  {
+    name: "Fanzee Token",
+    symbol: "FNZ",
+    addr: "EQDCJL0iQHofcBBvFBHdVG233Ri2V4kCNFgfRT-gqAd3Oc86",
+  },
+  {
+    name: "DEFI HUNTERS DAO",
+    symbol: "DDAO",
+    addr: "EQCW5g1evnQN2OZZEVe-23aSvEsgPauWZlF27ZIz5REhnWRy",
+  },
+  {
+    name: "DHD Coin",
+    symbol: "DHD",
+    addr: "EQBCFwW8uFUh-amdRmNY9NyeDEaeDYXd9ggJGsicpqVcHq7B",
+  },
 ];
 
 let selectedJettonAddresses = [];
@@ -73,10 +129,10 @@ const renderSelectedAddresses = () => {
   selectedJettonAddresses.forEach((jettonAddress) => {
     const jettonAddressNode = createElementFromHTML(
       `<div class="form__address_list_block">
-          <span>${jettonAddress}</span>
+          <span>${jettonAddress.symbol}</span>
           <button
             class="button button--secondary"
-            onclick="return removeJettonAddress('${jettonAddress}')"
+            onclick="return removeJettonAddress('${jettonAddress.addr}')"
           >
             <svg
               width="24"
@@ -201,7 +257,9 @@ const createContract = () => {
     let supportedJettonsMap = new tonweb.boc.HashMap(256);
 
     const finalSupportedJettons = supportedJettons.concat(
-      selectedJettonAddresses
+      selectedJettonAddresses.map((jettonData) => {
+        return jettonData.addr;
+      })
     );
 
     for (i in finalSupportedJettons) {
@@ -261,8 +319,8 @@ const createContract = () => {
 
 const removeJettonAddress = (addressToRemove) => {
   const findJettonAddressIndex = selectedJettonAddresses.findIndex(
-    (jettonAddress) => {
-      return jettonAddress === addressToRemove;
+    (jettonData) => {
+      return jettonData.addr === addressToRemove;
     }
   );
 
@@ -283,8 +341,8 @@ const addJettonAddress = () => {
     return;
   }
 
-  const isJettonAdded = selectedJettonAddresses.findIndex((jettonAddress) => {
-    return jettonAddress === newJettonAddress;
+  const isJettonAdded = selectedJettonAddresses.findIndex((jettonData) => {
+    return jettonData.addr === newJettonAddress;
   });
 
   if (isJettonAdded >= 0) {
@@ -292,7 +350,10 @@ const addJettonAddress = () => {
   }
 
   newJettonAddressElement.value = "";
-  selectedJettonAddresses.unshift(newJettonAddress);
+  selectedJettonAddresses.unshift({
+    addr: newJettonAddress,
+    symbol: newJettonAddress,
+  });
   renderSelectedAddresses();
 };
 
