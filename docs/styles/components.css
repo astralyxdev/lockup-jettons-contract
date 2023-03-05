@@ -198,6 +198,15 @@
   font-weight: 700;
 }
 
+.separator {
+  margin: auto;
+  width: 90%;
+  height: 1px;
+  background-color: var(--input-stroke-dark);
+  content: "";
+  opacity: 0.3;
+}
+
 @media screen and (max-width: 1000px) {
   .netSwitch {
     position: static !important;
