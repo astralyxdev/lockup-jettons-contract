@@ -5,3 +5,9 @@ const int op::transfer = 0xf8a7ea5;
 const int op::burn = 0x595f07bc;
 const int op::transfer_notification = 0x7362d09c;
 const int op::excesses = 0xd53276db;
+
+const int op::lockup_data = 0xaa6d6e0;
+const int op::edit_owner = 0x56972f57;
+const int op::edit_receiver = 0x662b3853;
+const int op::extend_lock = 0x45520fcd;
+const int op::withdraw = 0x3f32601d;

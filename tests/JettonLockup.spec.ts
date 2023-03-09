@@ -117,12 +117,15 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xb5de5f9e, 32)
+                .storeUint(0x3f32601d, 32)
                 .storeUint(0, 64)
+                .storeUint(0, 8)
                 .storeRef(
                     beginCell()
+                        .storeUint(0x18, 6)
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
+                        .storeUint(0, 1 + 4 + 4 + 64 + 32 + 1)
                         .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
@@ -158,12 +161,15 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xb5de5f9e, 32)
+                .storeUint(0x3f32601d, 32)
                 .storeUint(0, 64)
+                .storeUint(0, 8)
                 .storeRef(
                     beginCell()
+                        .storeUint(0x18, 6)
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
+                        .storeUint(0, 1 + 4 + 4 + 64 + 32 + 1)
                         .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
@@ -204,7 +210,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.2'),
             'body': beginCell()
-                .storeUint(0x7a4c6d4a, 32)
+                .storeUint(0xaa6d6e0, 32)
                 .storeUint(10, 64)
                 .endCell()
         });
@@ -216,7 +222,7 @@ describe('JettonLockup', () => {
             from: jettonLockup.address,
             to: receiver.address,
             body: beginCell()
-                .storeUint(0x7a4c6d4a, 32)
+                .storeUint(0xaa6d6e0, 32)
                 .storeUint(10, 64)
                 .storeRef(accountData).endCell(),
             success: true,
@@ -228,7 +234,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xceba1400, 32)
+                .storeUint(0x45520fcd, 32)
                 .storeUint(0, 64)
                 .storeUint(1800, 64)
                 .endCell()
@@ -239,7 +245,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xceba1400, 32)
+                .storeUint(0x45520fcd, 32)
                 .storeUint(0, 64)
                 .storeUint(storedTimer + 1800, 64)
                 .endCell()
@@ -254,12 +260,15 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xb5de5f9e, 32)
+                .storeUint(0x3f32601d, 32)
                 .storeUint(0, 64)
+                .storeUint(0, 8)
                 .storeRef(
                     beginCell()
+                        .storeUint(0x18, 6)
                         .storeAddress(lockupWalletAddress)
                         .storeCoins(toNano('0.05'))
+                        .storeUint(0, 1 + 4 + 4 + 64 + 32 + 1)
                         .storeMaybeRef(
                             beginCell()
                                 .storeUint(0xf8a7ea5, 32)
@@ -293,7 +302,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xf6d29301, 32)
+                .storeUint(0x56972f57, 32)
                 .storeUint(0, 64)
                 .storeAddress(null)
                 .endCell()
@@ -310,7 +319,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0xceba1400, 32)
+                .storeUint(0x45520fcd, 32)
                 .storeUint(0, 64)
                 .storeUint(1800, 64)
                 .endCell()
@@ -327,7 +336,7 @@ describe('JettonLockup', () => {
             'to': jettonLockup.address,
             'value': toNano('0.1'),
             'body': beginCell()
-                .storeUint(0x16b628bf, 32)
+                .storeUint(0x662b3853, 32)
                 .storeUint(0, 64)
                 .storeAddress(owner.address)
                 .endCell()

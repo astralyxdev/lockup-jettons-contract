@@ -31,12 +31,12 @@ const drawSwitch = () => {
 
   document.body.prepend(
     createElementFromHTML(`<div class="netSwitch">
-      <span>mainNet</span>
+      <span>mainnet</span>
       <label class="switch__wrapper">
           <input type="checkbox" class="switch__content" id="switchNet" onchange="return switchNetStatus()" />
           <span class="switch__slider"></span>
       </label>
-      <span>testNet</span>
+      <span>testnet</span>
       </div>`)
   );
 
