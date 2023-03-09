@@ -29,7 +29,7 @@
     int op = in_msg_body~load_uint(32);
     int query_id = in_msg_body~load_uint(64);
 
-    if (op == "lockup_data"c) { ;; drop stored lockup data
+    if (op == op::lockup_data) { ;; drop stored lockup data
         send_raw_message(
             begin_cell()
                 .store_uint(0x10, 6)
@@ -38,7 +38,7 @@
                 .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
                 .store_ref(
                     begin_cell()
-                        .store_uint("lockup_data"c, 32)
+                        .store_uint(op::lockup_data, 32)
                         .store_uint(query_id, 64)
                         .store_ref(get_data())
                         .end_cell()
@@ -110,43 +110,59 @@
         return ();
     }
 
-    if (op == "edit_owner"c) {
+    if (op == op::edit_owner) {
         throw_unless(401, equal_slices(sender_address, owner_address));
         owner_address = in_msg_body~load_msg_addr();
         save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
-    if (op == "edit_receiver"c) {
+    if (op == op::edit_receiver) {
         throw_unless(401, equal_slices(sender_address, receiver_address));
         receiver_address = in_msg_body~load_msg_addr();
         save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
-    if (op == "extend_lock"c) {
+    if (op == op::extend_lock) {
         throw_unless(401, equal_slices(sender_address, owner_address));
         int unlocked_at = max(in_msg_body~load_uint(64), unlocked_at);
         save_data(jetton_balances, owner_address, receiver_address, unlocked_at);
         return ();
     }
-    if (op == "withdraw"c) {
+    if (op == op::withdraw) {
         throw_unless(401, equal_slices(sender_address, receiver_address));
         throw_unless(402, unlocked_at <= now());
 
         ;; if requested by recipient and lock time has expired, allow up to 4 internal messages to be sent
         while (in_msg_body.slice_refs()) {
-            var msg = in_msg_body~load_ref().begin_parse();
-            slice target_address = msg~load_msg_addr();
-            (int target_wc, int target_hashpart) = parse_std_addr(target_address);
-            int amount = msg~load_coins();
-            cell msg_body = msg~load_maybe_ref();
+            int mode = in_msg_body~load_uint(8);
+            cell message = in_msg_body~load_ref();
+
+            slice ms = message.begin_parse();
+            ms~skip_bits(4);
+            ms~load_msg_addr();
+            slice target_address = ms~load_msg_addr();
+            ms~load_coins();
+            ms~load_dict();
+            ms~load_coins();
+            ms~load_coins();
+            ms~skip_bits(96);
+            int maybe_init_state = ms~load_uint(1);
+            if (maybe_init_state == 1) {
+                ms~skip_bits(1);
+            }
+            int body = ms~load_uint(1);
+            if (body == 1) {
+                ms = ms~load_ref().begin_parse();
+            }
+            
+            (int target_wc, int target_hashpart) = target_address.parse_std_addr();
             (slice vs, int found?) = jetton_balances.udict_get?(256, target_hashpart);
-            ;; check whether this transaction affects the stored token balances
-            if (found? & (~ null?(msg_body))) {
-                slice ms = msg_body.begin_parse();
-                int op = ms~load_uint(32);
+            
+            if (found?) {
+                ;; if yes, update the onchain information about balances
+                int op = ms.slice_bits() >= 32 ? ms~load_uint(32) : 0;
                 if ((op == op::transfer) | (op == op::burn)) {
-                    ;; if yes, update the onchain information about balances
-                    ms~skip_bits(64);
+                    ms~skip_bits(64); ;; query_id
                     jetton_balances~udict_set_builder(
                         256, target_hashpart,
                         begin_cell()
@@ -157,19 +173,7 @@
                 }
             }
 
-            builder msg = begin_cell()
-                .store_uint(0x18, 6) ;; bounce message
-                .store_slice(target_address)
-                .store_coins(amount)
-                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1);
-
-            if (~ null?(msg_body)) {
-                msg = msg.store_uint(1, 1).store_ref(msg_body);
-            } else {
-                msg = msg.store_uint(0, 1);
-            }
-
-            send_raw_message(msg.end_cell(), 0);
+            send_raw_message(message, mode);
         }
 
         save_data(jetton_balances, owner_address, receiver_address, unlocked_at);

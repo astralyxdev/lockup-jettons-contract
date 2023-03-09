@@ -386,17 +386,20 @@ const withdrawFunds = async (symbol, targetAddress, amount) => {
   if (contractData.balances[symbol].isNative) {
     // if this TON
     let msgBody = new Cell();
+    msgBody.bits.writeUint(0x18, 6);
     msgBody.bits.writeAddress(new tonweb.Address(targetAddress));
     msgBody.bits.writeCoins(tonweb.utils.toNano(amount.toString()));
+    msgBody.bits.writeUint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
 
     let payload = new Cell();
-    payload.bits.writeUint(0xb5de5f9e, 32);
+    payload.bits.writeUint(0x3f32601d, 32);
     payload.bits.writeUint(0, 64);
+    payload.bits.writeUint(0, 8);
     payload.refs.push(msgBody);
 
     let query = {
       to: contractAddress,
-      value: tonweb.utils.toNano("0.05"),
+      value: parseInt(tonweb.utils.toNano("0.05").toString()),
       data: tonweb.utils.bytesToBase64(await payload.toBoc(false)),
       dataType: "boc",
     };
@@ -421,16 +424,18 @@ const withdrawFunds = async (symbol, targetAddress, amount) => {
     transferMsgBody.bits.writeUint(0, 1);
 
     let msgBody = new Cell();
+    msgBody.bits.writeUint(0x18, 6);
     msgBody.bits.writeAddress(
       new tonweb.Address(contractData.balances[symbol].walletAddress)
     );
     msgBody.bits.writeCoins(tonweb.utils.toNano("0.05"));
-    msgBody.bits.writeUint(1, 1);
+    msgBody.bits.writeUint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1);
     msgBody.refs.push(transferMsgBody);
 
     let payload = new Cell();
-    payload.bits.writeUint(0xb5de5f9e, 32);
+    payload.bits.writeUint(0x3f32601d, 32);
     payload.bits.writeUint(0, 64);
+    payload.bits.writeUint(0, 8);
     payload.refs.push(msgBody);
 
     let query = {
@@ -476,7 +481,7 @@ const operationButton = () => {
 
 const extendUnlockTime = async (extendValue) => {
   let payload = new Cell();
-  payload.bits.writeUint(0xceba1400, 32);
+  payload.bits.writeUint(0x45520fcd, 32);
   payload.bits.writeUint(0, 64);
   payload.bits.writeUint(extendValue, 64);
 
